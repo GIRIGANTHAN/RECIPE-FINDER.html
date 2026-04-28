@@ -1,2 +1,13 @@
-# RECIPE-FINDER.html
-This Indian Recipe Finder is a responsive web app featuring authentic, step-by-step guides for diverse dishes. Built with Tailwind CSS and Vanilla JS, it offers instant searching, category filtering, and detailed ingredient lists. It’s a clean, fast, and mobile-friendly digital cookbook for street food, curries, and desserts.
+Description
+A simple web app to search recipes using API and local data, with special support for Indian dishes.
+
+Features
+Search recipes by name
+Displays ingredients & instructions
+Uses async/await for API fetching
+Works offline with local dataset
+Responsive UI
+Tech Stack
+HTML, CSS (Tailwind), JavaScript
+Usage
+Open index.html, enter a dish name (e.g., idli, tea), and view results instantly.
