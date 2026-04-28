@@ -2,6 +2,7 @@ Description
 A simple web app to search recipes using API and local data, with special support for Indian dishes.
 
 Features
+
 Search recipes by name
 Displays ingredients & instructions
 Uses async/await for API fetching
