@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Indian Recipe Finder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .recipe-card {
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .recipe-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+
+<body class="text-white min-h-screen flex flex-col items-center p-5">
+
+  <h1 class="text-5xl font-bold mb-2">🍳 Indian Recipe Finder</h1>
+  <p class="text-yellow-200 mb-6 text-lg">Discover authentic Indian recipes instantly!</p>
+
+  <!-- Search -->
+  <div class="flex gap-2 mb-6 flex-wrap justify-center">
+    <input id="searchInput" type="text" placeholder="Search recipes (biryani, chai, paneer...)"
+      class="p-3 rounded text-black w-64 outline-none focus:ring-2 focus:ring-yellow-400">
+    <button onclick="searchRecipe()"
+      class="bg-yellow-400 text-black px-6 py-3 rounded font-semibold hover:bg-yellow-300 transition">
+      🔍 Search
+    </button>
+    <button onclick="showAllRecipes()"
+      class="bg-pink-400 text-black px-6 py-3 rounded font-semibold hover:bg-pink-300 transition">
+      📋 All Recipes
+    </button>
+  </div>
+
+  <!-- Quick Tags -->
+  <div class="mb-6 flex gap-2 flex-wrap justify-center max-w-4xl">
+    <button onclick="quickSearch('breakfast')" class="bg-orange-400 text-black px-3 py-1 rounded text-sm">Breakfast</button>
+    <button onclick="quickSearch('rice')" class="bg-orange-400 text-black px-3 py-1 rounded text-sm">Rice</button>
+    <button onclick="quickSearch('curry')" class="bg-orange-400 text-black px-3 py-1 rounded text-sm">Curries</button>
+    <button onclick="quickSearch('bread')" class="bg-orange-400 text-black px-3 py-1 rounded text-sm">Breads</button>
+    <button onclick="quickSearch('snacks')" class="bg-orange-400 text-black px-3 py-1 rounded text-sm">Snacks</button>
+    <button onclick="quickSearch('dessert')" class="bg-orange-400 text-black px-3 py-1 rounded text-sm">Desserts</button>
+  </div>
+
+  <!-- Results -->
+  <div id="result" class="max-w-4xl w-full"></div>
+
+<script>
+// 🇮🇳 Comprehensive Indian Recipes Dataset
+const indianRecipes = [
+  // ☕ BREAKFAST & BEVERAGES
+  { name: "Tea (Chai)", category: "breakfast", ingredients: ["Water","Milk","Tea leaves","Sugar","Ginger"], instructions: "Boil water with crushed ginger, add tea leaves, then milk. Strain and serve hot." },
+  { name: "Masala Tea", category: "breakfast", ingredients: ["Water","Milk","Tea leaves","Ginger","Cardamom","Cinnamon"], instructions: "Boil water with whole spices, add tea leaves, milk, simmer and strain." },
+  { name: "Idli", category: "breakfast", ingredients: ["Rice","Urad Dal","Salt","Fenugreek seeds"], instructions: "Grind soaked rice and dal, ferment overnight, steam in molds until fluffy." },
+  { name: "Dosa", category: "breakfast", ingredients: ["Rice","Urad Dal","Salt","Oil","Fenugreek seeds"], instructions: "Spread fermented batter thin on hot greased pan, cook until golden and crispy." },
+  { name: "Uttapam", category: "breakfast", ingredients: ["Rice batter","Onions","Tomatoes","Green chilies","Oil"], instructions: "Pour thick batter on pan, top with veggies, cook until golden on both sides." },
+  { name: "Poha", category: "breakfast", ingredients: ["Flattened rice","Potatoes","Onions","Peanuts","Turmeric"], instructions: "Rinse poha, fry potatoes, add poha, mix with spices and peanuts." },
+  { name: "Upma", category: "breakfast", ingredients: ["Semolina","Water","Oil","Mustard seeds","Peas"], instructions: "Toast semolina, add boiling water, stir continuously, add tempering." },
+  { name: "Paratha", category: "breakfast", ingredients: ["Wheat flour","Water","Oil","Salt","Vegetables"], instructions: "Make dough, roll with ghee, fold, cook on griddle until golden." },
+  { name: "Aloo Paratha", category: "breakfast", ingredients: ["Wheat flour","Potatoes","Onions","Green chilies","Oil"], instructions: "Stuff wheat dough with spiced mashed potato, roll and cook until crispy." },
+  { name: "Paneer Paratha", category: "breakfast", ingredients: ["Wheat flour","Paneer","Capsicum","Oil","Salt"], instructions: "Stuff dough with crumbled paneer and veggies, roll and cook on hot griddle." },
+  { name: "Puri", category: "breakfast", ingredients: ["Wheat flour","Oil","Salt","Water"], instructions: "Make stiff dough, roll into balls, flatten and deep fry until puffed." },
+  { name: "Chole Bhature", category: "breakfast", ingredients: ["Flour","Yogurt","Chickpeas","Ginger","Spices"], instructions: "Prepare soft dough, let it rise. Boil and season chickpeas. Fry bhature." },
+  { name: "Pesarattu", category: "breakfast", ingredients: ["Green moong dal","Rice","Green chilies","Onions","Oil"], instructions: "Grind soaked moong dal and rice, spread on pan, cook until crispy." },
+  { name: "Breakfast Sandwich", category: "breakfast", ingredients: ["Bread","Butter","Vegetables","Cheese","Spices"], instructions: "Toast bread, spread butter, add fried veggies and cheese, serve hot." },
+
+  // 🍛 RICE DISHES
+  { name: "Biryani", category: "rice", ingredients: ["Basmati rice","Meat/Vegetables","Yogurt","Ginger-garlic paste","Saffron","Cinnamon"], instructions: "Sauté meat, layer with parboiled rice, add saffron milk, cover and cook." },
+  { name: "Hyderabadi Biryani", category: "rice", ingredients: ["Basmati rice","Mutton","Yogurt","Ginger","Mint","Saffron"], instructions: "Layer marinated meat with rice, add fried onions, cover tightly and cook." },
+  { name: "Vegetable Biryani", category: "rice", ingredients: ["Basmati rice","Mixed vegetables","Yogurt","Ginger-garlic","Saffron"], instructions: "Parboil rice, sauté veggies, layer with rice, seal and cook until done." },
+  { name: "Pulao", category: "rice", ingredients: ["Basmati rice","Ghee","Cinnamon","Cardamom","Bay leaves","Vegetables"], instructions: "Toast spices in ghee, add rice and water, cook until fluffy." },
+  { name: "Vegetable Pulao", category: "rice", ingredients: ["Rice","Mixed vegetables","Ghee","Spices"], instructions: "Sauté veggies, add rice, pour water, cook covered until fluffy." },
+  { name: "Lemon Rice", category: "rice", ingredients: ["Rice","Lemon juice","Peanuts","Turmeric","Oil"], instructions: "Mix cooked rice with lemon juice, add seasoning and peanuts." },
+  { name: "Tomato Rice", category: "rice", ingredients: ["Rice","Tomatoes","Spices","Oil","Onions"], instructions: "Cook rice with tomato puree, spices and sautéed onions." },
+  { name: "Curd Rice", category: "rice", ingredients: ["Rice","Curd","Oil","Mustard seeds","Curry leaves"], instructions: "Mix cooked rice with curd, add tempering of mustard and curry leaves." },
+  { name: "Coconut Rice", category: "rice", ingredients: ["Rice","Grated coconut","Green chilies","Ginger","Oil"], instructions: "Sauté rice with spices, add coconut, cook until fragrant." },
+  { name: "Fried Rice", category: "rice", ingredients: ["Cooked rice","Vegetables","Soy sauce","Oil","Garlic"], instructions: "Heat oil, stir-fry veggies and rice, add soy sauce and cook quickly." },
+  { name: "Tamarind Rice", category: "rice", ingredients: ["Rice","Tamarind","Peanuts","Oil","Turmeric"], instructions: "Mix cooked rice with tamarind paste, add roasted peanuts and seasonings." },
+  { name: "Sambar Rice", category: "rice", ingredients: ["Rice","Sambar powder","Vegetables","Oil","Dal"], instructions: "Cook rice with sambar powder and mixed vegetables in oil." },
+  { name: "Peas Pulao", category: "rice", ingredients: ["Basmati rice","Green peas","Ghee","Spices"], instructions: "Toast spices, add rice and peas, cook with water until fluffy." },
+
+  // 🍗 CURRIES & GRAVIES
+  { name: "Butter Chicken", category: "curry", ingredients: ["Chicken","Tomato puree","Cream","Butter","Ginger-garlic","Spices"], instructions: "Marinate chicken, cook, prepare rich tomato-cream sauce, combine and simmer." },
+  { name: "Chicken Tikka Masala", category: "curry", ingredients: ["Chicken","Yogurt","Tomato puree","Cream","Spices"], instructions: "Grill marinated chicken, prepare creamy tomato sauce, combine and cook." },
+  { name: "Tandoori Chicken", category: "curry", ingredients: ["Chicken","Yogurt","Tandoori masala","Lemon juice","Oil"], instructions: "Marinate chicken in spiced yogurt, grill or bake until cooked." },
+  { name: "Chicken Vindaloo", category: "curry", ingredients: ["Chicken","Vinegar","Potatoes","Red chilies","Spices"], instructions: "Cook chicken with vinegar-based spice paste, add potatoes and simmer." },
+  { name: "Chicken Korma", category: "curry", ingredients: ["Chicken","Coconut milk","Yogurt","Cream","Spices"], instructions: "Cook chicken in aromatic spice-yogurt sauce with coconut milk." },
+  { name: "Murgh Makhani", category: "curry", ingredients: ["Chicken","Butter","Tomatoes","Cream","Spices"], instructions: "Grill chicken, simmer in buttery tomato-cream sauce." },
+  { name: "Paneer Butter Masala", category: "curry", ingredients: ["Paneer","Tomatoes","Cream","Butter","Ginger-garlic"], instructions: "Fry paneer, prepare tomato-cream sauce, combine and simmer gently." },
+  { name: "Shahi Paneer", category: "curry", ingredients: ["Paneer","Yogurt","Cream","Cashew paste","Spices"], instructions: "Cook paneer in creamy cashew-yogurt sauce with aromatic spices." },
+  { name: "Palak Paneer", category: "curry", ingredients: ["Paneer","Spinach","Cream","Ginger","Garlic"], instructions: "Blend spinach, cook with paneer and cream for smooth green curry." },
+  { name: "Chana Masala", category: "curry", ingredients: ["Chickpeas","Tomatoes","Onions","Ginger-garlic","Spices"], instructions: "Cook boiled chickpeas with tomato-based spice sauce until flavored." },
+  { name: "Dal Makhani", category: "curry", ingredients: ["Black lentils","Kidney beans","Cream","Butter","Tomatoes"], instructions: "Slow-cook lentils, add cream and butter, season with spices." },
+  { name: "Dal Tadka", category: "curry", ingredients: ["Toor dal","Ginger","Garlic","Tomatoes","Oil"], instructions: "Cook dal, prepare tempering with garlic and ginger, mix together." },
+  { name: "Lamb Rogan Josh", category: "curry", ingredients: ["Lamb","Tomatoes","Yogurt","Ginger-garlic","Spices"], instructions: "Marinate lamb, cook in tomato-yogurt sauce with aromatic spices." },
+  { name: "Fish Curry", category: "curry", ingredients: ["Fish","Tomatoes","Coconut milk","Ginger","Green chilies"], instructions: "Cook fish with tomato paste and coconut milk, add spices to taste." },
+  { name: "Prawn Curry", category: "curry", ingredients: ["Prawns","Onions","Tomatoes","Coconut milk","Spices"], instructions: "Sauté prawns, add tomato-coconut sauce, simmer until cooked." },
+  { name: "Baingan Bharta", category: "curry", ingredients: ["Eggplant","Tomatoes","Onions","Ginger-garlic","Oil"], instructions: "Roast eggplant, mash, cook with tomato-onion mixture." },
+  { name: "Aloo Gobhi", category: "curry", ingredients: ["Potatoes","Cauliflower","Turmeric","Cumin","Oil"], instructions: "Cut veggies, stir-fry with spices until tender and golden." },
+  { name: "Mixed Vegetable Curry", category: "curry", ingredients: ["Mixed vegetables","Tomatoes","Onions","Spices","Oil"], instructions: "Cook mixed veggies in tomato-onion gravy with aromatic spices." },
+
+  // 🍞 BREADS
+  { name: "Chapati", category: "bread", ingredients: ["Wheat flour","Water","Salt","Oil"], instructions: "Knead soft dough, roll thin, cook on hot griddle until spots appear." },
+  { name: "Roti", category: "bread", ingredients: ["Wheat flour","Water","Salt"], instructions: "Make dough, knead well, roll thin circles, cook on tawa until puffed." },
+  { name: "Naan", category: "bread", ingredients: ["Maida","Yogurt","Yeast","Salt","Oil"], instructions: "Make dough with yeast, let rise, roll, cook in tandoor or oven." },
+  { name: "Kulcha", category: "bread", ingredients: ["Maida","Yogurt","Onions","Coriander","Oil"], instructions: "Stuffed dough with veggies, roll and cook in tandoor or oven." },
+  { name: "Puri", category: "bread", ingredients: ["Wheat flour","Oil","Salt","Water"], instructions: "Make stiff dough, roll thin, deep fry until puffed and golden." },
+  { name: "Bhature", category: "bread", ingredients: ["Flour","Yogurt","Baking powder","Salt"], instructions: "Make soft dough with yogurt, let rise, deep fry until fluffy." },
+  { name: "Thalipeeth", category: "bread", ingredients: ["Mixed flours","Onions","Green chilies","Oil"], instructions: "Mix flours with veggies, make thick dough, cook on griddle." },
+  { name: "Methi Paratha", category: "bread", ingredients: ["Wheat flour","Fenugreek leaves","Oil","Salt"], instructions: "Knead flour with fenugreek, roll with ghee, cook until golden." },
+  { name: "Pav (Pao)", category: "bread", ingredients: ["Maida","Milk","Yeast","Sugar","Butter"], instructions: "Make leavened dough, shape, bake until golden brown." },
+
+  // 🥟 SNACKS & STARTERS
+  { name: "Samosa", category: "snacks", ingredients: ["Maida","Potatoes","Peas","Green chilies","Oil"], instructions: "Make pastry, fill with spiced potato-pea mixture, fold triangles, deep fry." },
+  { name: "Spring Rolls", category: "snacks", ingredients: ["Spring roll wrapper","Cabbage","Carrot","Soy sauce","Oil"], instructions: "Fill wrapper with veggies, roll tightly, deep fry until crispy." },
+  { name: "Pakora", category: "snacks", ingredients: ["Chickpea flour","Vegetables","Green chilies","Water"], instructions: "Make batter, coat veggies, deep fry in oil until golden and crispy." },
+  { name: "Onion Bhaji", category: "snacks", ingredients: ["Chickpea flour","Onions","Green chilies","Oil"], instructions: "Mix onions with batter, deep fry until golden and crispy." },
+  { name: "Sambar Vada", category: "snacks", ingredients: ["Urad Dal","Spices","Oil"], instructions: "Grind dal, make batter, shape donuts, fry and soak in sambar." },
+  { name: "Medu Vada", category: "snacks", ingredients: ["Urad Dal","Spices","Oil"], instructions: "Grind soaked dal into fluffy batter, shape and deep fry until golden." },
+  { name: "Chikhalwali", category: "snacks", ingredients: ["Gram flour","Sesame seeds","Oil","Spices"], instructions: "Make paste, roll thin, cut into pieces, deep fry until crispy." },
+  { name: "Chakli", category: "snacks", ingredients: ["Rice flour","Urad flour","Oil","Spices"], instructions: "Make batter, pipe spiral shapes, deep fry until golden and crispy." },
+  { name: "Murukku", category: "snacks", ingredients: ["Rice flour","Urad flour","Oil","Spices"], instructions: "Make dough, pipe twists, fry in oil until golden and crunchy." },
+  { name: "Aloo Tikki", category: "snacks", ingredients: ["Potatoes","Spices","Breadcrumbs","Oil"], instructions: "Boil potatoes, mash, make patties, coat with breadcrumbs, fry." },
+  { name: "Seekh Kebab", category: "snacks", ingredients: ["Meat","Ginger-garlic","Green chilies","Oil"], instructions: "Mix meat with spices, mold on skewer, grill or fry until cooked." },
+  { name: "Paneer Tikka", category: "snacks", ingredients: ["Paneer","Yogurt","Ginger-garlic","Spices"], instructions: "Marinate paneer cubes, skewer, grill until golden." },
+
+  // 🥬 SIDE DISHES & CHUTNEYS
+  { name: "Coconut Chutney", category: "sides", ingredients: ["Coconut","Green chilies","Ginger","Salt","Oil"], instructions: "Grind coconut with spices, season with oil and mustard." },
+  { name: "Tomato Chutney", category: "sides", ingredients: ["Tomatoes","Onions","Green chilies","Oil"], instructions: "Cook tomatoes with onions and spices, grind and serve." },
+  { name: "Mint Chutney", category: "sides", ingredients: ["Fresh mint","Coriander","Green chilies","Lemon juice"], instructions: "Blend fresh herbs with green chilies and lemon juice." },
+  { name: "Tamarind Chutney", category: "sides", ingredients: ["Tamarind","Jaggery","Spices","Water"], instructions: "Soak tamarind, blend with water and spices, strain." },
+  { name: "Sambar", category: "sides", ingredients: ["Toor Dal","Vegetables","Tamarind","Sambar powder"], instructions: "Cook dal, add veggies and tamarind with sambar powder." },
+  { name: "Rasam", category: "sides", ingredients: ["Tomatoes","Tamarind","Pepper","Cumin","Water"], instructions: "Simmer tomatoes with spices and tamarind juice, add water." },
+  { name: "Raita", category: "sides", ingredients: ["Yogurt","Cucumber","Spices","Oil"], instructions: "Mix yogurt with grated cucumber, add spices and tempering." },
+  { name: "Boondi Raita", category: "sides", ingredients: ["Yogurt","Boondi","Spices","Oil"], instructions: "Mix yogurt with boondi, season with spices." },
+  { name: "Pickle", category: "sides", ingredients: ["Mango/Lemon","Oil","Spices","Salt"], instructions: "Cut fruit, mix with spices, preserve in oil for days." },
+
+  // 🍰 DESSERTS & SWEETS
+  { name: "Kheer", category: "dessert", ingredients: ["Rice","Milk","Sugar","Cardamom","Nuts"], instructions: "Cook rice in milk with sugar, add cardamom and fried nuts." },
+  { name: "Gulab Jamun", category: "dessert", ingredients: ["Milk powder","Flour","Sugar syrup","Cardamom"], instructions: "Make dough balls, fry golden, soak in warm sugar syrup." },
+  { name: "Jalebi", category: "dessert", ingredients: ["Flour","Sugar syrup","Oil"], instructions: "Make batter, press in spiral shapes, fry, soak in hot sugar syrup." },
+  { name: "Laddu", category: "dessert", ingredients: ["Gram flour","Ghee","Sugar","Cardamom"], instructions: "Roast flour in ghee, add sugar, shape into balls when cool." },
+  { name: "Barfi", category: "dessert", ingredients: ["Milk solids","Sugar","Ghee","Nuts"], instructions: "Cook condensed milk with ghee, pour on tray, cool and cut." },
+  { name: "Rasgulla", category: "dessert", ingredients: ["Paneer","Maida","Sugar syrup","Cardamom"], instructions: "Make paneer balls, boil in sugar syrup until spongy." },
+  { name: "Halwa", category: "dessert", ingredients: ["Carrots/Semolina","Ghee","Milk","Sugar","Nuts"], instructions: "Cook ingredient in ghee, add milk and sugar, mix well." },
+  { name: "Payasam", category: "dessert", ingredients: ["Rice","Coconut milk","Jaggery","Cashews"], instructions: "Cook rice, add coconut milk and jaggery, top with fried cashews." },
+  { name: "Khela", category: "dessert", ingredients: ["Rice","Jaggery","Coconut","Oil"], instructions: "Roast rice flour, mix with jaggery and coconut, make balls." },
+  { name: "Peda", category: "dessert", ingredients: ["Milk solids","Sugar","Ghee","Cardamom"], instructions: "Cook condensed milk, add sugar and ghee, shape into rounds." },
+
+  // 🥦 VEGETABLES & OTHER DISHES
+  { name: "Vegetable Sambar", category: "vegetable", ingredients: ["Toor dal","Mixed vegetables","Tamarind","Sambar powder"], instructions: "Pressure cook dal, add cut veggies and sambar powder." },
+  { name: "Avial", category: "vegetable", ingredients: ["Mixed vegetables","Coconut","Turmeric","Oil"], instructions: "Cut veggies, cook with turmeric, add ground coconut and oil." },
+  { name: "Stir Fried Vegetables", category: "vegetable", ingredients: ["Mixed vegetables","Garlic","Ginger","Soy sauce","Oil"], instructions: "Heat oil, stir-fry vegetables quickly with garlic and ginger." },
+  { name: "Bathua Raita", category: "vegetable", ingredients: ["Bathua leaves","Yogurt","Spices"], instructions: "Cook bathua, cool, mix with yogurt and spices." },
+  { name: "Corn Curry", category: "vegetable", ingredients: ["Corn","Onions","Tomatoes","Spices"], instructions: "Cook corn in tomato-onion gravy with aromatic spices." }
+];
+
+// 🔍 Enhanced Search Function
+function searchRecipe() {
+  const query = document.getElementById("searchInput").value.toLowerCase().trim();
+  const resultDiv = document.getElementById("result");
+
+  if (!query) {
+    resultDiv.innerHTML = "<p class='text-center text-yellow-200 text-lg'>Please enter a recipe name or keyword!</p>";
+    return;
+  }
+
+  // Keywords for better matching
+  const keywordMap = {
+    "chai": ["tea", "masala tea"],
+    "coffee": ["tea"],
+    "bread": ["naan", "roti", "chapati", "puri", "paratha"],
+    "rice": ["biryani", "pulao", "fried rice", "lemon rice"],
+    "curry": ["butter chicken", "paneer", "dal", "chana"],
+    "snack": ["samosa", "pakora", "vada", "tikka"],
+    "sweet": ["kheer", "gulab jamun", "jalebi", "laddu"],
+    "breakfast": ["idli", "dosa", "paratha", "poha", "upma"]
+  };
+
+  let matches = [];
+
+  indianRecipes.forEach(recipe => {
+    const nameMatch = recipe.name.toLowerCase().includes(query);
+    const categoryMatch = recipe.category.toLowerCase().includes(query);
+    const ingredientMatch = recipe.ingredients.some(ing => ing.toLowerCase().includes(query));
+    
+    // Check keyword maps
+    let keywordMatch = false;
+    for (let key in keywordMap) {
+      if (query.includes(key)) {
+        keywordMatch = keywordMap[key].some(recipe_name => 
+          recipe.name.toLowerCase().includes(recipe_name)
+        );
+      }
+    }
+
+    if (nameMatch || categoryMatch || ingredientMatch || keywordMatch) {
+      matches.push(recipe);
+    }
+  });
+
+  displayResults(matches, query);
+}
+
+// Quick search function
+function quickSearch(category) {
+  const matches = indianRecipes.filter(r => r.category.toLowerCase().includes(category));
+  displayResults(matches, category.toUpperCase());
+}
+
+// Show all recipes
+function showAllRecipes() {
+  displayResults(indianRecipes, "All Recipes");
+}
+
+// Display results
+function displayResults(recipes, query) {
+  const resultDiv = document.getElementById("result");
+
+  if (recipes.length === 0) {
+    resultDiv.innerHTML = `<p class='text-center text-yellow-200 text-lg'>No recipes found for "${query}". Try another search!</p>`;
+    return;
+  }
+
+  let output = `<h2 class="text-2xl font-bold mb-4 text-yellow-200">Found ${recipes.length} recipe(s) for "${query}" 🎉</h2>`;
+
+  recipes.forEach((recipe, index) => {
+    const emoji = getCategoryEmoji(recipe.category);
+    output += `
+      <div class="recipe-card bg-white text-black p-5 rounded-lg mb-4 shadow-lg border-l-4 border-yellow-400">
+        <h2 class="text-2xl font-bold text-purple-600 mb-2">${emoji} ${recipe.name}</h2>
+        <p class="text-sm text-gray-500 mb-3"><strong>Category:</strong> ${recipe.category}</p>
+        
+        <div class="mb-3">
+          <p class="font-semibold text-purple-700 mb-2">🥘 Ingredients:</p>
+          <p class="text-gray-700">${recipe.ingredients.join(" • ")}</p>
+        </div>
+        
+        <div>
+          <p class="font-semibold text-purple-700 mb-2">👨‍🍳 Instructions:</p>
+          <p class="text-gray-700">${recipe.instructions}</p>
+        </div>
+      </div>
+    `;
+  });
+
+  resultDiv.innerHTML = output;
+}
+
+// Helper function to get category emoji
+function getCategoryEmoji(category) {
+  const emojis = {
+    "breakfast": "🌅",
+    "rice": "🍚",
+    "curry": "🍛",
+    "bread": "🍞",
+    "snacks": "🥟",
+    "sides": "🥬",
+    "dessert": "🍰",
+    "vegetable": "🥦"
+  };
+  return emojis[category] || "🍳";
+}
+
+// Allow Enter key to search
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') searchRecipe();
+  });
+});
+</script>
+
+</body>
+</html>
